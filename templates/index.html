@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Öneri Uygulaması</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f8f8f8;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: auto;
+        }
+        label, input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Film Öneri Uygulaması</h1>
+    <form id="filmForm">
+        <label for="tur">Film Türü:</label>
+        <input type="text" id="tur" name="tur" required>
+        
+        <label for="yil">Film Yılı:</label>
+        <input type="text" id="yil" name="yil" required>
+
+        <button type="submit">Öneri Al</button>
+    </form>
+    <div id="filmResults"></div>
+
+    <script>
+        document.getElementById('filmForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            var tur = document.getElementById('tur').value;
+            var yil = document.getElementById('yil').value;
+
+            // Flask API URL'yi doğru şekilde verin
+            fetch('http://127.0.0.1:5000/api/film-onerisi', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tur: tur,
+                    yil: yil
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var resultDiv = document.getElementById('filmResults');
+                resultDiv.innerHTML = ''; // Sonuçları temizle
+                
+                if (data.error) {
+                    resultDiv.innerHTML = '<p>' + data.error + '</p>';
+                } else {
+                    var films = data.films;
+                    films.forEach(function(film) {
+                        var filmDiv = document.createElement('div');
+                        filmDiv.innerHTML = `
+                            <h3>${film.title} (${film.release_date || 'Bilinmiyor'})</h3>
+                            <p><strong>Tür:</strong> ${film.genres || 'Bilinmiyor'}</p>
+                            <p><strong>Özet:</strong> ${film.overview || 'Özet mevcut değil'}</p>
+                            <p><strong>Oyuncular:</strong> ${film.cast || 'Oyuncular bilinmiyor'}</p>
+                            <p><strong>Anahtar Kelimeler:</strong> ${film.keywords || 'Anahtar kelimeler mevcut değil'}</p>
+                        `;
+                        resultDiv.appendChild(filmDiv);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+            });
+        });
+    </script>
+</body>
+</html>
